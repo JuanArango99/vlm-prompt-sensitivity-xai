@@ -16,7 +16,8 @@ def main():
     model = Qwen2VLForConditionalGeneration.from_pretrained(
         model_id, 
         torch_dtype=torch.bfloat16, 
-        device_map="auto"
+        device_map="auto",
+        attn_implementation="eager"
     )
     processor = AutoProcessor.from_pretrained(model_id)
     
@@ -37,7 +38,12 @@ def main():
             {
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": image_path},
+                    {
+                        "type": "image", 
+                        "image": image_path,
+                        "resized_height": 256,
+                        "resized_width": 256
+                    },
                     {"type": "text", "text": text_prompt},
                 ],
             }
