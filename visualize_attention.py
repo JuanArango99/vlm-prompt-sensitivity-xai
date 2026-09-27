@@ -12,14 +12,29 @@ def cleanup():
     gc.collect()
     torch.cuda.empty_cache()
 
-def get_target_token_indices(input_ids, processor, target_substring="dog"):
-    """Find the indices of tokens that contain the target substring."""
-    indices = []
-    for i, token_id in enumerate(input_ids):
-        token_str = processor.decode(token_id).lower()
-        if target_substring in token_str:
-            indices.append(i)
-    return indices
+def get_target_token_indices(input_ids, processor, style):
+    """Find the indices of tokens that make up the target word 'dog', handling BPE splits."""
+    # BPE tokenizes perturbations differently
+    targets = {
+        "baseline": [" dog"],
+        "all_caps": [" do", "g"],
+        "camel_case": [" d", "o", "g"],
+        "aggressive": [" do", "g"]
+    }
+    
+    target_tokens = targets[style]
+    
+    # Sliding window to find the sequence of tokens
+    for i in range(len(input_ids) - len(target_tokens) + 1):
+        match = True
+        for j, t in enumerate(target_tokens):
+            if processor.decode(input_ids[i+j]).lower() != t:
+                match = False
+                break
+        if match:
+            return list(range(i, i+len(target_tokens)))
+            
+    return []
 
 def main():
     cleanup()
@@ -81,14 +96,12 @@ def main():
         ).to("cuda")
         
         # Identify target tokens (the word "dog")
-        target_idx_list = get_target_token_indices(inputs.input_ids[0], processor, target_substring="dog")
+        target_idx_list = get_target_token_indices(inputs.input_ids[0], processor, style)
         if not target_idx_list:
             print(f"WARNING: Could not find target word 'dog' in the tokenized sequence for {style}.")
             continue
             
-        # If the word is split into multiple tokens, we'll take the first one (or average them)
-        target_idx = target_idx_list[0]
-        print(f"Target word 'dog' found at token index: {target_idx}")
+        print(f"Target word 'dog' found at token indices: {target_idx_list}")
         
         # Identify image tokens
         image_indices = torch.where(inputs.input_ids[0] == img_pad_id)[0]
@@ -106,8 +119,8 @@ def main():
             # Average across all attention heads
             mean_heads_attn = last_layer_attn.mean(dim=0) # (seq_len, seq_len)
             
-            # Extract attention from the target text token to all image tokens
-            text_to_image_attn = mean_heads_attn[target_idx, image_indices].float().cpu()
+            # Extract attention from the target text tokens to all image tokens (average if multiple tokens)
+            text_to_image_attn = mean_heads_attn[target_idx_list, :][:, image_indices].mean(dim=0).float().cpu()
             
             # Normalize to sum to 1 to represent a probability distribution for KL Divergence
             prob_dist = text_to_image_attn / text_to_image_attn.sum()
