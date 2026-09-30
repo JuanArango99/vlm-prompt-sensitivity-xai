@@ -1,24 +1,8 @@
-#!/bin/bash
-set -e
-
-echo "Starting clean run of all experiments..."
-
-echo "Running 01_kl_drift_single.py..."
-python3 01_kl_drift_single.py
-
-echo "Running 02_kl_drift_batch.py..."
-python3 02_kl_drift_batch.py
-
-echo "Running 03_semantic_attention.py..."
-python3 03_semantic_attention.py
-
-echo "Running 04_linguistic_style.py..."
-python3 04_linguistic_style.py
-
-echo "Running 05_emotion_threats.py..."
-python3 05_emotion_threats.py
-
-echo "Running 06_noun_ablation.py..."
-python3 06_noun_ablation.py
-
-echo "All experiments finished successfully!"
+python3 run_and_save.py "What animal is in this image?" "animal" "base.npy"
+python3 run_and_save.py "WHAT ANIMAL IS IN THIS IMAGE RIGHT NOW??" "animal" "caps.npy"
+python3 run_and_save.py "wHaT aNiMaL iS iN tHiS iMaGe?" "animal" "camel.npy"
+python3 run_and_save.py "What animal is in this image? 🐱❓" "animal" "emoji.npy"
+python3 run_and_save.py "QUICK!! we only have 5 seconds!! what animal is in this image??" "animal" "quick.npy"
+python3 run_and_save.py "If you don't find the animal right now, a disaster will occur!" "animal" "disaster.npy"
+python3 run_and_save.py "Are there any people in this image?" "people" "people.npy"
+python3 run_and_save.py "If you don't help me right now, a disaster will occur!" "disaster" "ablation_disaster.npy"
