@@ -1,1 +1,25 @@
-venv/\n__pycache__/\n*.pyc\n.env\nsample_image.jpg\n
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+
+# LaTeX build intermediate files
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+
+# Local scratch, course submission archives & deprecated files
+context.md
+refs.txt
+submission/
+.archive/
+deprecated/
+archive/
+data/results/deprecated/
