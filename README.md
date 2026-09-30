@@ -1,39 +1,105 @@
-# XAI Saliency Drift in Vision-Language Models
+# The Impact of Text Style on Visual Focus in Vision-Language Models
 
-This repository contains the codebase and experimental results for a Master's seminar term paper in Explainable AI (XAI). The project investigates **"Gradient-Based Input Saliency for Vision-Language Models"**, specifically focusing on how non-semantic linguistic perturbations (e.g., tone, urgency, formatting) alter the physical visual grounding of the Qwen2-VL-2B model.
+Official repository for the Master's thesis: The Impact of Text Style on Visual Focus in Vision-Language Models by Juan Jose Arango Serrano.
 
-## Core Discoveries
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Through a series of Grad-CAM and KL Divergence ablation experiments, this project identified three major phenomena in Vision-Language Models (VLMs):
+## Overview
 
-1. **Image-Conditioned Prompt Sensitivity:** The robustness of a VLM's visual attention to non-semantic linguistic perturbations is not uniform across inputs. We observed vastly different magnitudes of saliency drift depending on the input image (e.g., high drift on one subject, near-zero on another). This indicates that visual grounding stability is heavily dependent on specific image features or the model's latent priors for that subject.
-2. **Attention Sink Defaulting:** When a VLM is distracted by heavy, non-visual linguistic semantics (such as insults or extreme urgency), it loses visual confidence and dumps its attention into arbitrary "Attention Sinks" (register tokens) in the background.
-3. **Panic-Induced Scattered Vision:** Extreme, existential semantic urgency (e.g., "people will die") completely destabilizes the model's cross-attention matrix. The language layers inject chaotic activation that forces the model to rapidly scan and highlight almost every patch in the image, destroying targeted visual grounding.
+This repository contains the complete experimental suite and evaluation pipeline for the research paper investigating **Saliency Drift in Vision-Language Models (VLMs)**. 
+
+The project analyzes how non-semantic prompt variations—such as formatting changes (ALL CAPS, alternating capitalization, emojis) and emotional tone perturbations (urgency, insult, existential threats)—affect the internal cross-modal alignment and spatial visual grounding of modern multimodal architectures (specifically evaluating `Qwen2-VL-2B-Instruct` quantized in 4-bit precision).
+
+![Linguistic Style and Attention Saliency](data/results/experiments/linguistic_style_results.png)
+
+---
+
+## Core Findings
+
+By extracting gradient attribution maps (Grad-CAM at Layer 22 of the vision encoder) and measuring spatial probability displacement with Kullback-Leibler (KL) Divergence:
+
+1. **Sub-Word Fragmentation vs. Gradient Spikes:**
+   - **Alternating Capitalization (`wHaT aNiMaL...`):** Causes BPE sub-word fragmentation, disrupting semantic decoding and yielding the highest stylistic spatial divergence (**$D_{KL} = 0.133$**), scattering visual focus across background pixels.
+   - **ALL CAPS (`WHAT ANIMAL...`):** Preserves whole-word token IDs but causes severe gradient magnitude spikes that saturate visual heatmaps despite retaining structural centering on the target object (**$D_{KL} = 0.074$**).
+   - **Emoji Insertion (`...🐱❓`):** Introduces minor localization displacement (**$D_{KL} = 0.042$**).
+
+2. **Attention Sink Defaulting Under Adversarial Urgency:**
+   - When bombarded with urgent or hostile text (e.g., insults or synthetic time constraints), the model loses confidence in object localization and diverts visual attention into background corner patches acting as visual attention sinks (register tokens).
+
+3. **Existential Threats and Semantic Scattering:**
+   - Prompting with abstract existential urgency (e.g., *"If you don't find the animal right now, a disaster will occur!"*) completely destabilizes cross-attention alignment, inducing broad directional scanning across irrelevant scene regions (**$D_{KL} = 0.381$**).
+
+![Emotional Urgency Drift](data/results/experiments/emotion_results.png)
+
+---
 
 ## Repository Structure
 
-* **`code/experiments/`**: Contains the reproducible, sequentially numbered Python scripts for all experiments.
-* **`data/images/`**: Source images for the experiments (`cat.jpg`, `komodo.jpg`).
-* **`data/results/experiments/`**: The generated Grad-CAM heatmaps and visual comparisons.
-* **`latex/`**: Source files and templates for the final term paper.
-* **`deprecated/`**: Old sweeping scripts and tests used during early methodology discovery.
-
-## Running the Experiments
-
-The experiments are heavily optimized to run on consumer hardware (tested on an RTX 3050 6GB VRAM) by leveraging 4-bit quantization and aggressive VRAM garbage collection.
-
-To run a clean batch of all 6 experiments:
-```bash
-cd code/experiments
-./run_all.sh
+```
+├── README.md                          <- Main project overview and instructions
+├── run_all.sh                         <- Master script to execute all experiments sequentially
+├── code/
+│   └── experiments/
+│       ├── 01_kl_drift_single.py      <- Single-sample KL divergence sanity check
+│       ├── 02_kl_drift_batch.py       <- Multi-prompt comparative drift evaluation
+│       ├── 03_semantic_attention.py   <- Cross-modal text-to-vision alignment analysis
+│       ├── 04_linguistic_style.py     <- Capitalization & emoji perturbation experiment
+│       ├── 05_emotion_threats.py      <- Urgency & emotional threat evaluation
+│       ├── 06_noun_ablation.py        <- Noun substitution and semantic ablation
+│       ├── compute_kl.py              <- Core Grad-CAM extraction and KL metric library
+│       └── run_all.sh                 <- Local experiment runner
+└── data/
+    ├── images/                        <- Benchmark input images (cat.jpg, komodo.jpg)
+    └── results/
+        └── experiments/               <- Attribution heatmaps, plots & quantitative metrics
+            ├── ablation_results.png
+            ├── emotion_results.png
+            ├── how_we_ask_results.png
+            ├── linguistic_style_results.png
+            └── kl_divergence_metrics.txt
 ```
 
-## Setup Requirements
+---
 
-* `torch`
-* `transformers`
-* `bitsandbytes`
-* `qwen_vl_utils`
-* `scipy`
-* `matplotlib`
-* `Pillow`
+## Setup & Reproduction
+
+### Prerequisites
+- Python 3.10+
+- NVIDIA GPU with $\ge$ 6 GB VRAM (tested on RTX 3050 Laptop GPU 6GB)
+- CUDA 12.x
+
+### Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/JuanArango99/vlm-prompt-sensitivity-xai.git
+cd vlm-prompt-sensitivity-xai
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+pip install transformers accelerate bitsandbytes qwen_vl_utils scipy matplotlib pillow
+```
+
+### Running All Experiments
+To execute the complete evaluation pipeline and regenerate all heatmaps and quantitative metrics:
+```bash
+./run_all.sh
+```
+Results and metrics will be saved directly into `data/results/experiments/`.
+
+---
+
+## Citation
+If you use this codebase or build upon these findings, please cite:
+```bibtex
+@misc{arango2026textstylevlm,
+  title={The Impact of Text Style on Visual Focus in Vision-Language Models},
+  author={Arango Serrano, Juan Jose},
+  year={2026},
+  institution={Universit{\"a}t Trier},
+  howpublished={Master's seminar term paper in Explainable Artificial Intelligence}
+}
+```
+
+---
+
+## License
+This project is open-source under the MIT License.

@@ -1,29 +1,26 @@
-# Images
-*.jpg
-*.png
-*.jpeg
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
 
-# LaTeX build files (and the latex directory if requested)
+# LaTeX build intermediate files & local directory
+latex/
 *.aux
 *.log
 *.out
-*.pdf
 *.fls
 *.fdb_latexmk
 *.synctex.gz
 *.bbl
 *.blg
-latex/
 
-# Deprecated/Archive
+# Local scratch, course submission archives & deprecated files
+context.md
+refs.txt
+submission/
+.archive/
 deprecated/
 archive/
-
-# Python
-__pycache__/
-*.pyc
-
-# Context and text files
-context.md
-*.txt
-.archive/
+data/results/deprecated/
