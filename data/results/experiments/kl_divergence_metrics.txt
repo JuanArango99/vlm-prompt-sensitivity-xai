@@ -1,0 +1,10 @@
+--- Linguistic Style (Target: animal) ---
+ALL CAPS: 0.06300245
+camelCase: 0.13881536
+Emoji: 0.04930158
+--- Emotion / Urgency (Target: animal) ---
+PLEASE: 0.12970689
+QUICK: 0.1604532
+DISASTER: 0.19879465
+--- Ablation (Target: disaster vs people) ---
+Calm People vs Urgent Disaster: 0.35212383
