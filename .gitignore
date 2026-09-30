@@ -26,3 +26,4 @@ __pycache__/
 # Context and text files
 context.md
 *.txt
+.archive/
